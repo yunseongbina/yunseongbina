@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>동물상 테스트</title>
+</head>
+<body>
+  <div>동물상 테스트</div>
+  <div id="upload-area">
+    <input type="file" accept="image/*" onchange="readFile(this.files[0]);" />
+  </div>
+  <div id="loading-area" style="display: none;">
+    <span>🏃‍♂️~~</span>
+    <br />
+    <span>모델을 불러오는 중입니다...</span>
+  </div>
+  <div id="result-area" style="display: none;">
+    <img id="upload-image" src="#" alt="your image" />
+    <div id='label-container'></div>
+  </div>
+  <div id="disqus_thread"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+  <script type="text/javascript">
+    const URL = "https://teachablemachine.withgoogle.com/models/E8i3wsZ2R/";
+
+    let model, labelContainer, maxPredictions;
+    let isModelReady = false;
+    let image = document.getElementById("upload-image");
+    let loadingArea = document.getElementById("loading-area");
+    let resultArea = document.getElementById("result-area");
+    const reader = new FileReader();
+
+    async function readFile(file) {
+      if (isModelReady === false) {
+        loadingArea.style.display = "block";
+        await init();
+      }
+      reader.readAsDataURL(file);
+    }
+
+    reader.onload = async function(event) {
+      await image.setAttribute('src', event.target.result);
+      await predict();
+      loadingArea.style.display = "none";
+      resultArea.style.display = "block";
+    };
+
+    async function init() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+
+      labelContainer = document.getElementById("label-container");
+      for (let i = 0; i < maxPredictions; i++) {
+        labelContainer.appendChild(document.createElement("div"));
+      }
+    }
+
+    async function predict() {
+      const prediction = await model.predict(image);
+      for (let i = 0; i < maxPredictions; i++) {
+        const classPrediction = prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+        labelContainer.childNodes[i].innerHTML = classPrediction;
+      }
+      isModelReady = true;
+    }
+  </script>
+  <script>
+    /**
+    *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+    *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables    */
+    /*
+    var disqus_config = function () {
+    this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+    this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+    };
+    */
+    (function() { // DON'T EDIT BELOW THIS LINE
+    var d = document, s = d.createElement('script');
+    s.src = 'https://dongmulsang-teseuteu-lt5zm6t8tp.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</body>
+</html>
